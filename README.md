@@ -21,6 +21,3 @@
 
 ## Halál utáni újrakezdés
 - Enter
-
-## Gyógyulás
-- 7 kill után megjelenik egy szív, ami 15 életet visz fel
