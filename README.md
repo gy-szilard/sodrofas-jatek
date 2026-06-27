@@ -21,3 +21,6 @@
 
 ## Halál utáni újrakezdés
 - Enter
+
+## Sebzés és gyógyulás
+- A játék előrehaladtával az enemy egyre többet sebez és a szív egyre többet gyógyít.
