@@ -1,0 +1,78 @@
+body {
+    margin: 0;
+    background: #222;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: sans-serif;
+    position: relative;
+}
+
+canvas {
+    background: white;
+    border: 3px solid black;
+
+}
+
+.info-gomb {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.2s ease;
+    z-index: 10;
+}
+
+.info-gomb:hover {
+    color: #00adb5;
+    transform: scale(1.1);
+}
+
+.leiras {
+    position: absolute;
+    top: 65px;
+    left: 20px;
+    background: rgba(30, 30, 30, 0.95);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #444;
+    line-height: 1.6;
+    font-size: 14px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 9;
+    max-width: 250px;
+}
+
+.leiras.aktiv {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.leiras h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #00adb5;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+}
+
+.leiras p {
+    margin: 5px 0;
+}
+
+.leiras p .kiemelt {
+    color: #00adb5;
+    font-weight: bold;
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Sodrófás játék</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+</head>
+<body>
+
+    <button id="info-btn" class="info-gomb" title="Irányítás megtekintése">
+        <i class="fa-solid fa-circle-info"></i>
+    </button>
+
+    <div id="info-box" class="leiras">
+        <h3><i class="fa-solid fa-gamepad"></i> Információk</h3>
+        <p><span class="kiemelt">Irányítás</span>: W, A, S, D</p>
+        <p><span class="kiemelt">Ütés</span>: Space, Bal egér gomb</p>    
+        <p><span class="kiemelt">Karakterválasztás</span>: Bal egér gomb</p>
+        <p><span class="kiemelt">A játék teljes újrakezdése</span>: R</p>
+        <p><span class="kiemelt">Vissza a "spawn"-ra</span>: Q</p>
+        <p><span class="kiemelt">Game over után újrakezdés</span>: Enter</p>
+    </div>
+
+    <canvas id="game"></canvas>
+
+    <script src="game.js"></script>
+    
+    <script>
+        const infoBtn = document.getElementById('info-btn');
+        const infoBox = document.getElementById('info-box');
+
+        infoBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            infoBox.classList.toggle('aktiv');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!infoBox.contains(e.target) && e.target !== infoBtn) {
+                infoBox.classList.remove('aktiv');
+            }
+        });
+    </script>
+</body>
+</html>
