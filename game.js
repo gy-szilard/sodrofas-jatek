@@ -159,7 +159,7 @@ function attackNPCs() {
             npc.x = nx; npc.y = ny;
             score++;
 
-            enemyDamage = Math.min(15, 2 + Math.floor(score / 75));
+            enemyDamage = Math.min(15, 2 + Math.floor(score / 30));
 
             killsSinceLastHeart++;
             if (killsSinceLastHeart >= KILLS_REQUIRED_FOR_HEART) {
@@ -200,7 +200,7 @@ function checkHeartPickup() {
         if (px + 40 > h.x && px < h.x + HEART_SIZE &&
             py + 40 > h.y && py < h.y + HEART_SIZE) {
             
-            let currentHeal = 15 + Math.floor(score / 100) * 5;
+            let currentHeal = 15 + Math.floor(score / 45) * 5;
             
             currentHeal = Math.min(40, currentHeal);
 
