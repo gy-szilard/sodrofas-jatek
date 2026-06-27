@@ -23,4 +23,4 @@
 - Enter
 
 ## Sebzés és gyógyulás
-- A játék előrehaladtával az enemy egyre többet sebez és a szív egyre többet gyógyít.
+- A játék előrehaladtával az enemy egyre többet sebez (max 15-öt / ütés) és a szív egyre többet gyógyít (max 40-et / szív).
