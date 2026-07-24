@@ -8,6 +8,24 @@ const cellSize = 47.5;
 canvas.width = 950;
 canvas.height = 680;
 
+// Karakter és NPC fizikai hitbox mérete
+const CHAR_SIZE = 32;
+// Férfi karakter finomhangolt méret-szorzója (hogy arányos maradjon, de ne érjen a falhoz)
+const MALE_SCALE = 0.85;
+
+// ===== Képek Betöltése =====
+const maleImg = new Image();
+maleImg.src = "media/pictures/male.png";
+
+const femaleImg = new Image();
+femaleImg.src = "media/pictures/female.png";
+
+const enemyImg = new Image();
+enemyImg.src = "media/pictures/enemy.png";
+
+const rollingPinImg = new Image();
+rollingPinImg.src = "media/pictures/rolling_pin.png";
+
 // ===== Játék állapot =====
 let maze = [];
 let px = 0, py = 0, speed = 5, facing = "right";
@@ -27,20 +45,21 @@ const KILLS_REQUIRED_FOR_HEART = 7;
 const HEART_HEAL_AMOUNT = 15; 
 const HEART_SIZE = 25;
 
-// ===== NPC =====
+// ===== NPC (Ellenség) =====
 class NPC {
     constructor(x, y) {
-        this.x = x; this.y = y; this.size = 40;
+        this.x = x; this.y = y; this.size = CHAR_SIZE;
         this.dx = 0; this.dy = 0;
+        this.facing = "right";
         this.setRandomDirection();
     }
     setRandomDirection() {
         const dir = Math.floor(Math.random() * 4);
         this.dx = 0; this.dy = 0;
-        if (dir === 0) this.dy = -2;
-        if (dir === 1) this.dy = 2;
-        if (dir === 2) this.dx = -2;
-        if (dir === 3) this.dx = 2;
+        if (dir === 0) { this.dy = -2; this.facing = "up"; }
+        if (dir === 1) { this.dy = 2; this.facing = "down"; }
+        if (dir === 2) { this.dx = -2; this.facing = "left"; }
+        if (dir === 3) { this.dx = 2; this.facing = "right"; }
     }
     move() {
         if (!isColliding(this.x + this.dx, this.y + this.dy)) {
@@ -70,13 +89,15 @@ function generateMaze() {
 
 // ===== Spawn =====
 function placePlayer() {
-    px = cellSize; py = cellSize;
+    const offset = (cellSize - CHAR_SIZE) / 2;
+    px = cellSize + offset; 
+    py = cellSize + offset;
     npcs = [];
-    for (let i = 0; i < 8; i++) { // NPC-k száma
+    for (let i = 0; i < 8; i++) {
         let nx, ny, tries = 0;
         do {
-            nx = Math.floor(Math.random() * cols) * cellSize;
-            ny = Math.floor(Math.random() * rows) * cellSize;
+            nx = Math.floor(Math.random() * cols) * cellSize + offset;
+            ny = Math.floor(Math.random() * rows) * cellSize + offset;
             tries++; if (tries > 100) break;
         } while (
             maze[Math.floor(ny / cellSize)][Math.floor(nx / cellSize)] ||
@@ -90,8 +111,8 @@ function placePlayer() {
 function isColliding(x, y) {
     const cellX = Math.floor(x / cellSize);
     const cellY = Math.floor(y / cellSize);
-    const cellX2 = Math.floor((x + 40) / cellSize);
-    const cellY2 = Math.floor((y + 40) / cellSize);
+    const cellX2 = Math.floor((x + CHAR_SIZE) / cellSize);
+    const cellY2 = Math.floor((y + CHAR_SIZE) / cellSize);
     if (cellX < 0 || cellY < 0 || cellX2 >= cols || cellY2 >= rows) return true;
     for (let i = cellY; i <= cellY2; i++)
         for (let j = cellX; j <= cellX2; j++)
@@ -132,25 +153,31 @@ function moveNPCs() { npcs.forEach(n => n.move()); }
 // ===== Támadás =====
 function getAttackRect() {
     if (attackTimer <= 0) return null;
-    if (facing === "right") return { x: px + 40, y: py + 12, w: 40, h: 16 };
-    if (facing === "left") return { x: px - 40, y: py + 12, w: 40, h: 16 };
-    if (facing === "up") return { x: px + 12, y: py - 40, w: 16, h: 40 };
-    return { x: px + 12, y: py + 40, w: 16, h: 40 };
+    
+    const pinLength = 48;
+    const pinThick = 16;
+    
+    if (facing === "right") return { x: px + CHAR_SIZE, y: py + 8, w: pinLength, h: pinThick };
+    if (facing === "left")  return { x: px - pinLength, y: py + 8, w: pinLength, h: pinThick };
+    // Felfelé ütésnél kitoltuk a pozíciót, hogy tisztán a fej FÖLÖTT legyen!
+    if (facing === "up")    return { x: px + 8, y: py - pinLength - 6, w: pinThick, h: pinLength };
+    return { x: px + 8, y: py + CHAR_SIZE, w: pinThick, h: pinLength }; // down
 }
 
 function attackNPCs() {
     const atk = getAttackRect();
     if (!atk) return;
     npcs.forEach(npc => {
-        if (atk.x < npc.x + 40 &&
+        if (atk.x < npc.x + CHAR_SIZE &&
             atk.x + atk.w > npc.x &&
-            atk.y < npc.y + 40 &&
+            atk.y < npc.y + CHAR_SIZE &&
             atk.y + atk.h > npc.y) {
 
+            const offset = (cellSize - CHAR_SIZE) / 2;
             let nx, ny;
             do {
-                nx = Math.floor(Math.random() * cols) * cellSize;
-                ny = Math.floor(Math.random() * rows) * cellSize;
+                nx = Math.floor(Math.random() * cols) * cellSize + offset;
+                ny = Math.floor(Math.random() * rows) * cellSize + offset;
             } while (
                 maze[Math.floor(ny / cellSize)][Math.floor(nx / cellSize)] ||
                 (Math.abs(nx - px) < cellSize * 2 && Math.abs(ny - py) < cellSize * 2)
@@ -182,7 +209,7 @@ function attackNPCs() {
 function checkHits() {
     if (hitCooldown > 0) hitCooldown--;
     for (let npc of npcs) {
-        if (px + 40 > npc.x && px < npc.x + 40 && py + 40 > npc.y && py < npc.y + 40) {
+        if (px + CHAR_SIZE > npc.x && px < npc.x + CHAR_SIZE && py + CHAR_SIZE > npc.y && py < npc.y + CHAR_SIZE) {
             if (hitCooldown === 0) { 
                 hp -= enemyDamage;
                 hitCooldown = 15; 
@@ -193,45 +220,90 @@ function checkHits() {
     if (attackTimer > 0) attackTimer--;
 }
 
-// ===== Szívek felszedésének ellenőrzése =====
+// ===== Szívek felszedése =====
 function checkHeartPickup() {
     for (let i = hearts.length - 1; i >= 0; i--) {
         let h = hearts[i];
-        if (px + 40 > h.x && px < h.x + HEART_SIZE &&
-            py + 40 > h.y && py < h.y + HEART_SIZE) {
+        if (px + CHAR_SIZE > h.x && px < h.x + HEART_SIZE &&
+            py + CHAR_SIZE > h.y && py < h.y + HEART_SIZE) {
             
             let currentHeal = 15 + Math.floor(score / 45) * 5;
-            
             currentHeal = Math.min(40, currentHeal);
 
             hp = Math.min(100, hp + currentHeal);
-            
             hearts.splice(i, 1);
         }
     }
 }
 
-// ===== Karakter rajzolás =====
-function drawCharacter(x, y, isPlayer, femaleOption) {
-    ctx.fillStyle = "darkgray";
-    ctx.fillRect(x + 5, y + 30, 10, 10);
-    ctx.fillRect(x + 25, y + 30, 10, 10);
-
-    if (isPlayer) {
-        ctx.fillStyle = femaleOption ? "#cf48bd" : "#245cd5";
-        ctx.fillRect(x + 5, y + 10, 30, 25);
-        ctx.fillStyle = "#e6c395";
-        ctx.beginPath();
-        ctx.arc(x + 20, y + 10, 10, 0, Math.PI * 2);
-        ctx.fill();
-    } else {
-        ctx.fillStyle = "green"; // Átírva pirosról ZÖLDRE
-        ctx.fillRect(x + 5, y + 10, 30, 25);
-        ctx.fillStyle = "#e6c395";
-        ctx.beginPath();
-        ctx.arc(x + 20, y + 10, 10, 0, Math.PI * 2);
-        ctx.fill();
+// ===== Képek kirajzolása arányos méretezéssel =====
+function drawSprite(img, x, y, targetWidth, targetHeight, flipHorizontally = false, rotateAngle = 0) {
+    ctx.save();
+    
+    if (!img.complete || img.naturalWidth === 0) {
+        ctx.restore();
+        return;
     }
+
+    const aspectRatio = img.naturalWidth / img.naturalHeight;
+    let renderWidth = targetWidth;
+    let renderHeight = targetWidth / aspectRatio;
+
+    let drawY = y - (renderHeight - targetHeight);
+
+    ctx.translate(x + targetWidth / 2, drawY + renderHeight / 2);
+
+    if (flipHorizontally) {
+        ctx.scale(-1, 1);
+    }
+    if (rotateAngle !== 0) {
+        ctx.rotate(rotateAngle);
+    }
+
+    ctx.drawImage(img, -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
+    ctx.restore();
+}
+
+// Karakter és NPC rajzoló
+function drawCharacter(x, y, isPlayer, femaleOption, currentFacing) {
+    let img = isPlayer ? (femaleOption ? femaleImg : maleImg) : enemyImg;
+    let flip = (currentFacing === "left");
+    
+    // Ha a férfi karakterről van szó, kicsit lecsökkentjük a rajzolt méretét (arányosan)
+    let renderSize = (isPlayer && !femaleOption) ? CHAR_SIZE * MALE_SCALE : CHAR_SIZE;
+    let drawOffset = (CHAR_SIZE - renderSize) / 2; // Középre igazítás
+
+    drawSprite(img, x + drawOffset, y + drawOffset, renderSize, renderSize, flip);
+}
+
+// Sodrófa kirajzolása
+function drawRollingPin(atkRect, currentFacing) {
+    ctx.save();
+    if (!rollingPinImg.complete || rollingPinImg.naturalWidth === 0) {
+        ctx.restore();
+        return;
+    }
+
+    const centerX = atkRect.x + atkRect.w / 2;
+    const centerY = atkRect.y + atkRect.h / 2;
+
+    ctx.translate(centerX, centerY);
+
+    if (currentFacing === "up") {
+        ctx.rotate(-Math.PI / 2);
+    } else if (currentFacing === "down") {
+        ctx.rotate(Math.PI / 2);
+    } else if (currentFacing === "left") {
+        ctx.scale(-1, 1);
+    }
+
+    if (currentFacing === "up" || currentFacing === "down") {
+        ctx.drawImage(rollingPinImg, -atkRect.h / 2, -atkRect.w / 2, atkRect.h, atkRect.w);
+    } else {
+        ctx.drawImage(rollingPinImg, -atkRect.w / 2, -atkRect.h / 2, atkRect.w, atkRect.h);
+    }
+
+    ctx.restore();
 }
 
 // ===== Rajzolás =====
@@ -243,8 +315,8 @@ function draw() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         const centerX = canvas.width / 2;
         const y = canvas.height / 2;
-        drawCharacter(centerX - 80, y, true, false);
-        drawCharacter(centerX + 40, y, true, true);
+        drawCharacter(centerX - 80, y, true, false, "right");
+        drawCharacter(centerX + 40, y, true, true, "right");
         return;
     }
 
@@ -258,7 +330,7 @@ function draw() {
         }
     }
 
-    // Összes aktív szív kirajzolása a listából
+    // Összes aktív szív kirajzolása
     hearts.forEach(h => {
         ctx.fillStyle = "red";
         ctx.beginPath();
@@ -272,15 +344,14 @@ function draw() {
         ctx.fill();
     });
 
-    // Karakterek
-    drawCharacter(px, py, true, female);
-    npcs.forEach(n => drawCharacter(n.x, n.y, false, false));
+    // Karakterek kirajzolása
+    drawCharacter(px, py, true, female, facing);
+    npcs.forEach(n => drawCharacter(n.x, n.y, false, false, n.facing));
 
-    // Támadás
+    // Sodrófa (Támadás) Kirajzolása
     const atk = getAttackRect();
     if (atk) {
-        ctx.fillStyle = "#b5783f";
-        ctx.fillRect(atk.x, atk.y, atk.w, atk.h);
+        drawRollingPin(atk, facing);
     }
 
     // HP sáv
@@ -299,7 +370,6 @@ function draw() {
     ctx.fillStyle = "goldenrod";
     ctx.fillText("Pont: " + score, 220 + 50, 10 + 20 / 2);
 
-    // Aktuális ellenséges sebzés kijelzése debug / infó jelleggel (opcionális, de jó látni a nehezedést)
     ctx.font = "14px Arial";
     ctx.fillStyle = "darkred";
     ctx.fillText("Dmg: " + enemyDamage, 340, 10 + 20 / 2);
@@ -332,7 +402,7 @@ function update() {
 function resetWholeGame() {
     hp = 100;
     score = 0;
-    enemyDamage = 2; // Újraindításkor a sebzés is visszaáll alaphelyzetbe
+    enemyDamage = 2;
     gameOver = false;
     w = false; a = false; s = false; d = false;
     attackTimer = 0;
@@ -350,8 +420,9 @@ document.addEventListener("keydown", e => {
     }
 
     if ((e.key === "q" || e.key === "Q") && !choosingCharacter && !gameOver) {
-        px = cellSize; 
-        py = cellSize;
+        const offset = (cellSize - CHAR_SIZE) / 2;
+        px = cellSize + offset; 
+        py = cellSize + offset;
         facing = "right";
         return;
     }
@@ -361,8 +432,10 @@ document.addEventListener("keydown", e => {
     if (gameOver && e.key === "Enter") {
         hp = 100;
         score = 0;
-        enemyDamage = 2; // Újraindításkor a sebzés itt is visszaáll
-        px = cellSize; py = cellSize;
+        enemyDamage = 2;
+        const offset = (cellSize - CHAR_SIZE) / 2;
+        px = cellSize + offset; 
+        py = cellSize + offset;
         facing = "right";
         gameOver = false;
         hearts = []; 
