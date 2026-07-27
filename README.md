@@ -24,3 +24,7 @@
 
 ## Sebzés és gyógyulás
 - A játék előrehaladtával az enemy egyre többet sebez (max 15-öt / ütés) és a szív egyre többet gyógyít (max 40-et / szív).
+
+## Telefonról is játszható?
+ - Igen, játszható, ugyanúgy böngészőben meg kell nyitni
+ - Csak generálásbeli különbségek vannak (kisebb labirintus és kevesebb enemy)

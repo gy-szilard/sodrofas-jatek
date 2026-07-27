@@ -1,34 +1,32 @@
-// ===== Canvas =====
+// ===== Canvas Setup =====
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const rows = 15;
-const cols = 20;
-const cellSize = 47.5;
-canvas.width = 950;
-canvas.height = 680;
+// Érintőképernyős (mobil) eszköz detektálása
+const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
-// Karakter és NPC fizikai hitbox mérete
-const CHAR_SIZE = 32;
-// Férfi karakter finomhangolt méret-szorzója (hogy arányos maradjon, de ne érjen a falhoz)
+// Mobilon 9 sor és 15 oszlop, de NAGYOBB (60px) téglákkal
+// Így a folyosók sokkal tágasabbak, és tartsuk a görgetésmentes nézetet!
+const rows = isTouchDevice ? 9 : 15;
+const cols = isTouchDevice ? 15 : 20;
+const cellSize = isTouchDevice ? 60 : 47.5;
+
+canvas.width = cols * cellSize;   // Mobilon: 900px, PC-n: 950px
+canvas.height = rows * cellSize;  // Mobilon: 540px, PC-n: 680px
+
+// Karakter és NPC fizikai hitbox mérete (mobilon 38px, a 60px-es folyosókon tökéletesen elfér)
+const CHAR_SIZE = isTouchDevice ? 38 : 32;
 const MALE_SCALE = 0.85;
 
 // ===== Képek Betöltése =====
-const maleImg = new Image();
-maleImg.src = "media/pictures/male.png";
-
-const femaleImg = new Image();
-femaleImg.src = "media/pictures/female.png";
-
-const enemyImg = new Image();
-enemyImg.src = "media/pictures/enemy.png";
-
-const rollingPinImg = new Image();
-rollingPinImg.src = "media/pictures/rolling_pin.png";
+const maleImg = new Image(); maleImg.src = "media/pictures/male.png";
+const femaleImg = new Image(); femaleImg.src = "media/pictures/female.png";
+const enemyImg = new Image(); enemyImg.src = "media/pictures/enemy.png";
+const rollingPinImg = new Image(); rollingPinImg.src = "media/pictures/rolling_pin.png";
 
 // ===== Játék állapot =====
 let maze = [];
-let px = 0, py = 0, speed = 5, facing = "right";
+let px = 0, py = 0, speed = isTouchDevice ? 4.5 : 5, facing = "right";
 let hp = 100, score = 0, gameOver = false;
 let attackTimer = 0, hitCooldown = 0;
 let w = false, a = false, s = false, d = false;
@@ -36,14 +34,13 @@ let female = false;
 let choosingCharacter = true;
 
 // ===== Sebzés növekedési mechanika =====
-let enemyDamage = 2; // Alap sebzés
+let enemyDamage = 2;
 
 // ===== Szívek (Gyógyítás) állapot =====
 let hearts = []; 
 let killsSinceLastHeart = 0;
 const KILLS_REQUIRED_FOR_HEART = 7;
-const HEART_HEAL_AMOUNT = 15; 
-const HEART_SIZE = 25;
+const HEART_SIZE = isTouchDevice ? 30 : 25;
 
 // ===== NPC (Ellenség) =====
 class NPC {
@@ -55,11 +52,12 @@ class NPC {
     }
     setRandomDirection() {
         const dir = Math.floor(Math.random() * 4);
+        const moveStep = isTouchDevice ? 2 : 2;
         this.dx = 0; this.dy = 0;
-        if (dir === 0) { this.dy = -2; this.facing = "up"; }
-        if (dir === 1) { this.dy = 2; this.facing = "down"; }
-        if (dir === 2) { this.dx = -2; this.facing = "left"; }
-        if (dir === 3) { this.dx = 2; this.facing = "right"; }
+        if (dir === 0) { this.dy = -moveStep; this.facing = "up"; }
+        if (dir === 1) { this.dy = moveStep; this.facing = "down"; }
+        if (dir === 2) { this.dx = -moveStep; this.facing = "left"; }
+        if (dir === 3) { this.dx = moveStep; this.facing = "right"; }
     }
     move() {
         if (!isColliding(this.x + this.dx, this.y + this.dy)) {
@@ -93,7 +91,9 @@ function placePlayer() {
     px = cellSize + offset; 
     py = cellSize + offset;
     npcs = [];
-    for (let i = 0; i < 8; i++) {
+    // Mobilon 5 ellenség a kisebb rácsszám miatt
+    const npcCount = isTouchDevice ? 5 : 8;
+    for (let i = 0; i < npcCount; i++) {
         let nx, ny, tries = 0;
         do {
             nx = Math.floor(Math.random() * cols) * cellSize + offset;
@@ -153,15 +153,12 @@ function moveNPCs() { npcs.forEach(n => n.move()); }
 // ===== Támadás =====
 function getAttackRect() {
     if (attackTimer <= 0) return null;
-    
-    const pinLength = 48;
-    const pinThick = 16;
-    
-    if (facing === "right") return { x: px + CHAR_SIZE, y: py + 8, w: pinLength, h: pinThick };
-    if (facing === "left")  return { x: px - pinLength, y: py + 8, w: pinLength, h: pinThick };
-    // Felfelé ütésnél kitoltuk a pozíciót, hogy tisztán a fej FÖLÖTT legyen!
-    if (facing === "up")    return { x: px + 8, y: py - pinLength - 6, w: pinThick, h: pinLength };
-    return { x: px + 8, y: py + CHAR_SIZE, w: pinThick, h: pinLength }; // down
+    const pinLength = isTouchDevice ? 56 : 48;
+    const pinThick = isTouchDevice ? 20 : 16;
+    if (facing === "right") return { x: px + CHAR_SIZE, y: py + 4, w: pinLength, h: pinThick };
+    if (facing === "left")  return { x: px - pinLength, y: py + 4, w: pinLength, h: pinThick };
+    if (facing === "up")    return { x: px + 4, y: py - pinLength - 4, w: pinThick, h: pinLength };
+    return { x: px + 4, y: py + CHAR_SIZE, w: pinThick, h: pinLength };
 }
 
 function attackNPCs() {
@@ -174,10 +171,11 @@ function attackNPCs() {
             atk.y + atk.h > npc.y) {
 
             const offset = (cellSize - CHAR_SIZE) / 2;
-            let nx, ny;
+            let nx, ny, tries = 0;
             do {
                 nx = Math.floor(Math.random() * cols) * cellSize + offset;
                 ny = Math.floor(Math.random() * rows) * cellSize + offset;
+                tries++; if (tries > 100) break;
             } while (
                 maze[Math.floor(ny / cellSize)][Math.floor(nx / cellSize)] ||
                 (Math.abs(nx - px) < cellSize * 2 && Math.abs(ny - py) < cellSize * 2)
@@ -185,27 +183,28 @@ function attackNPCs() {
 
             npc.x = nx; npc.y = ny;
             score++;
-
             enemyDamage = Math.min(15, 2 + Math.floor(score / 30));
 
             killsSinceLastHeart++;
             if (killsSinceLastHeart >= KILLS_REQUIRED_FOR_HEART) {
                 if (hearts.length < 3) {
-                    let hx, hy;
+                    let hx, hy, hTries = 0;
                     do {
                         hx = Math.floor(Math.random() * cols) * cellSize + (cellSize - HEART_SIZE) / 2;
                         hy = Math.floor(Math.random() * rows) * cellSize + (cellSize - HEART_SIZE) / 2;
+                        hTries++; if (hTries > 100) break;
                     } while (maze[Math.floor(hy / cellSize)][Math.floor(hx / cellSize)]);
-                    
                     hearts.push({ x: hx, y: hy });
                 }
                 killsSinceLastHeart = 0;
             }
+            
+            attackTimer = 0;
         }
     });
 }
 
-// ===== Sebzés =====
+// ===== Sebzés és Szívek =====
 function checkHits() {
     if (hitCooldown > 0) hitCooldown--;
     for (let npc of npcs) {
@@ -220,93 +219,61 @@ function checkHits() {
     if (attackTimer > 0) attackTimer--;
 }
 
-// ===== Szívek felszedése =====
 function checkHeartPickup() {
     for (let i = hearts.length - 1; i >= 0; i--) {
         let h = hearts[i];
         if (px + CHAR_SIZE > h.x && px < h.x + HEART_SIZE &&
             py + CHAR_SIZE > h.y && py < h.y + HEART_SIZE) {
-            
-            let currentHeal = 15 + Math.floor(score / 45) * 5;
-            currentHeal = Math.min(40, currentHeal);
-
+            let currentHeal = Math.min(40, 15 + Math.floor(score / 45) * 5);
             hp = Math.min(100, hp + currentHeal);
             hearts.splice(i, 1);
         }
     }
 }
 
-// ===== Képek kirajzolása arányos méretezéssel =====
+// ===== Rajzoló funkciók =====
 function drawSprite(img, x, y, targetWidth, targetHeight, flipHorizontally = false, rotateAngle = 0) {
     ctx.save();
-    
-    if (!img.complete || img.naturalWidth === 0) {
-        ctx.restore();
-        return;
-    }
-
+    if (!img.complete || img.naturalWidth === 0) { ctx.restore(); return; }
     const aspectRatio = img.naturalWidth / img.naturalHeight;
     let renderWidth = targetWidth;
     let renderHeight = targetWidth / aspectRatio;
-
     let drawY = y - (renderHeight - targetHeight);
 
     ctx.translate(x + targetWidth / 2, drawY + renderHeight / 2);
-
-    if (flipHorizontally) {
-        ctx.scale(-1, 1);
-    }
-    if (rotateAngle !== 0) {
-        ctx.rotate(rotateAngle);
-    }
-
+    if (flipHorizontally) ctx.scale(-1, 1);
+    if (rotateAngle !== 0) ctx.rotate(rotateAngle);
     ctx.drawImage(img, -renderWidth / 2, -renderHeight / 2, renderWidth, renderHeight);
     ctx.restore();
 }
 
-// Karakter és NPC rajzoló
 function drawCharacter(x, y, isPlayer, femaleOption, currentFacing) {
     let img = isPlayer ? (femaleOption ? femaleImg : maleImg) : enemyImg;
     let flip = (currentFacing === "left");
-    
-    // Ha a férfi karakterről van szó, kicsit lecsökkentjük a rajzolt méretét (arányosan)
     let renderSize = (isPlayer && !femaleOption) ? CHAR_SIZE * MALE_SCALE : CHAR_SIZE;
-    let drawOffset = (CHAR_SIZE - renderSize) / 2; // Középre igazítás
-
+    let drawOffset = (CHAR_SIZE - renderSize) / 2;
     drawSprite(img, x + drawOffset, y + drawOffset, renderSize, renderSize, flip);
 }
 
-// Sodrófa kirajzolása
 function drawRollingPin(atkRect, currentFacing) {
     ctx.save();
-    if (!rollingPinImg.complete || rollingPinImg.naturalWidth === 0) {
-        ctx.restore();
-        return;
-    }
-
+    if (!rollingPinImg.complete || rollingPinImg.naturalWidth === 0) { ctx.restore(); return; }
     const centerX = atkRect.x + atkRect.w / 2;
     const centerY = atkRect.y + atkRect.h / 2;
-
     ctx.translate(centerX, centerY);
 
-    if (currentFacing === "up") {
-        ctx.rotate(-Math.PI / 2);
-    } else if (currentFacing === "down") {
-        ctx.rotate(Math.PI / 2);
-    } else if (currentFacing === "left") {
-        ctx.scale(-1, 1);
-    }
+    if (currentFacing === "up") ctx.rotate(-Math.PI / 2);
+    else if (currentFacing === "down") ctx.rotate(Math.PI / 2);
+    else if (currentFacing === "left") ctx.scale(-1, 1);
 
     if (currentFacing === "up" || currentFacing === "down") {
         ctx.drawImage(rollingPinImg, -atkRect.h / 2, -atkRect.w / 2, atkRect.h, atkRect.w);
     } else {
         ctx.drawImage(rollingPinImg, -atkRect.w / 2, -atkRect.h / 2, atkRect.w, atkRect.h);
     }
-
     ctx.restore();
 }
 
-// ===== Rajzolás =====
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -315,12 +282,18 @@ function draw() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         const centerX = canvas.width / 2;
         const y = canvas.height / 2;
+        
+        ctx.fillStyle = "#333";
+        ctx.font = isTouchDevice ? "bold 24px Arial" : "bold 24px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Válassz karaktert!", centerX, y - 60);
+
         drawCharacter(centerX - 80, y, true, false, "right");
-        drawCharacter(centerX + 40, y, true, true, "right");
+        drawCharacter(centerX + 30, y, true, true, "right");
         return;
     }
 
-    // Labirintus falak
+    // Labirintus
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             if (maze[r][c]) {
@@ -330,7 +303,7 @@ function draw() {
         }
     }
 
-    // Összes aktív szív kirajzolása
+    // Szívek
     hearts.forEach(h => {
         ctx.fillStyle = "red";
         ctx.beginPath();
@@ -344,134 +317,156 @@ function draw() {
         ctx.fill();
     });
 
-    // Karakterek kirajzolása
+    // Karakterek
     drawCharacter(px, py, true, female, facing);
     npcs.forEach(n => drawCharacter(n.x, n.y, false, false, n.facing));
 
-    // Sodrófa (Támadás) Kirajzolása
+    // Sodrófa
     const atk = getAttackRect();
-    if (atk) {
-        drawRollingPin(atk, facing);
-    }
+    if (atk) drawRollingPin(atk, facing);
 
-    // HP sáv
-    ctx.fillStyle = "gray";
-    ctx.fillRect(10, 10, 200, 20);
-    ctx.fillStyle = "limegreen";
-    ctx.fillRect(10, 10, 2 * hp, 20);
-    ctx.strokeRect(10, 10, 200, 20);
+    // HP sáv & Stats
+    const barWidth = isTouchDevice ? 160 : 200;
+    const barHeight = isTouchDevice ? 20 : 20;
+    ctx.fillStyle = "gray"; ctx.fillRect(10, 10, barWidth, barHeight);
+    ctx.fillStyle = "limegreen"; ctx.fillRect(10, 10, Math.max(0, (barWidth / 100) * hp), barHeight);
+    ctx.strokeRect(10, 10, barWidth, barHeight);
 
-    // HP és pontszám
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "black";
-    ctx.fillText("HP: " + hp, 10 + 200 / 2, 10 + 20 / 2);
-    ctx.fillStyle = "goldenrod";
-    ctx.fillText("Pont: " + score, 220 + 50, 10 + 20 / 2);
-
-    ctx.font = "14px Arial";
-    ctx.fillStyle = "darkred";
-    ctx.fillText("Dmg: " + enemyDamage, 340, 10 + 20 / 2);
+    ctx.font = isTouchDevice ? "15px Arial" : "20px Arial"; 
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "black"; ctx.fillText("HP: " + hp, 10 + barWidth / 2, 10 + barHeight / 2);
+    ctx.fillStyle = "goldenrod"; ctx.fillText("Pont: " + score, 10 + barWidth + 55, 10 + barHeight / 2);
+    ctx.font = isTouchDevice ? "13px Arial" : "14px Arial"; 
+    ctx.fillStyle = "darkred"; ctx.fillText("Dmg: " + enemyDamage, 10 + barWidth + 125, 10 + barHeight / 2);
 
     // Game Over
     if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "red";
-        ctx.font = "40px Arial";
+        ctx.font = isTouchDevice ? "bold 30px Arial" : "bold 36px Arial";
         ctx.textAlign = "center";
-        ctx.fillText("Game Over! Press Enter to restart", canvas.width / 2, canvas.height / 2);
+        ctx.fillText("Game Over!", canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillStyle = "white";
+        ctx.font = isTouchDevice ? "17px Arial" : "20px Arial";
+        ctx.fillText("Koppints a képernyőre vagy nyomj Enter-t az újrakezdéshez", canvas.width / 2, canvas.height / 2 + 20);
     }
 }
 
-// ===== Update =====
+// ===== Restart / Reset Mechanics =====
+function fullResetToCharacterSelect() {
+    hp = 100; score = 0; enemyDamage = 2;
+    facing = "right"; gameOver = false;
+    hearts = []; killsSinceLastHeart = 0;
+    choosingCharacter = true;
+    w = false; a = false; s = false; d = false;
+}
+
+function restartGame() {
+    hp = 100; score = 0; enemyDamage = 2;
+    const offset = (cellSize - CHAR_SIZE) / 2;
+    px = cellSize + offset; py = cellSize + offset;
+    facing = "right"; gameOver = false;
+    hearts = []; killsSinceLastHeart = 0;
+    generateMaze(); placePlayer();
+}
+
+function respawnPlayer() {
+    const offset = (cellSize - CHAR_SIZE) / 2;
+    px = cellSize + offset;
+    py = cellSize + offset;
+}
+
 function update() {
-    if (!choosingCharacter) {
-        if (!gameOver) {
-            movePlayer();
-            moveNPCs();
-            checkHits();
-            checkHeartPickup();
-            attackNPCs();
-        }
+    if (!choosingCharacter && !gameOver) {
+        movePlayer();
+        moveNPCs();
+        checkHits();
+        checkHeartPickup();
+        attackNPCs();
     }
     draw();
     requestAnimationFrame(update);
 }
 
-// ===== Teljes Játék Újraindítás =====
-function resetWholeGame() {
-    hp = 100;
-    score = 0;
-    enemyDamage = 2;
-    gameOver = false;
-    w = false; a = false; s = false; d = false;
-    attackTimer = 0;
-    hitCooldown = 0;
-    hearts = []; 
-    killsSinceLastHeart = 0;
-    choosingCharacter = true; 
-}
-
-// ===== Input =====
+// ===== INPUT HANDLING (ASZTALI GÉP) =====
 document.addEventListener("keydown", e => {
-    if (e.key === "r" || e.key === "R") {
-        resetWholeGame();
-        return;
-    }
-
-    if ((e.key === "q" || e.key === "Q") && !choosingCharacter && !gameOver) {
-        const offset = (cellSize - CHAR_SIZE) / 2;
-        px = cellSize + offset; 
-        py = cellSize + offset;
-        facing = "right";
-        return;
-    }
+    if (isTouchDevice) return;
 
     if (choosingCharacter) return;
-
-    if (gameOver && e.key === "Enter") {
-        hp = 100;
-        score = 0;
-        enemyDamage = 2;
-        const offset = (cellSize - CHAR_SIZE) / 2;
-        px = cellSize + offset; 
-        py = cellSize + offset;
-        facing = "right";
-        gameOver = false;
-        hearts = []; 
-        killsSinceLastHeart = 0;
-        generateMaze();
-        placePlayer();
-    }
-
+    if (gameOver && e.key === "Enter") restartGame();
     if (!gameOver) {
-        if (e.key === "w") w = true;
-        if (e.key === "s") s = true;
-        if (e.key === "a") a = true;
-        if (e.key === "d") d = true;
+        if (e.key === "w" || e.key === "W") w = true;
+        if (e.key === "s" || e.key === "S") s = true;
+        if (e.key === "a" || e.key === "A") a = true;
+        if (e.key === "d" || e.key === "D") d = true;
         if (e.key === " ") attackTimer = 10;
+        if (e.key === "q" || e.key === "Q") respawnPlayer();
+        if (e.key === "r" || e.key === "R") fullResetToCharacterSelect();
     }
 });
 
 document.addEventListener("keyup", e => {
-    if (e.key === "w") w = false;
-    if (e.key === "s") s = false;
-    if (e.key === "a") a = false;
-    if (e.key === "d") d = false;
+    if (isTouchDevice) return;
+
+    if (e.key === "w" || e.key === "W") w = false;
+    if (e.key === "s" || e.key === "S") s = false;
+    if (e.key === "a" || e.key === "A") a = false;
+    if (e.key === "d" || e.key === "D") d = false;
 });
 
-canvas.addEventListener("mousedown", e => {
+// Canvas kattintás (Karakterválasztás, Érintés reakció)
+canvas.addEventListener("pointerdown", e => {
+    if (isTouchDevice && !choosingCharacter && !gameOver) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const clickX = (e.clientX - rect.left) * scaleX;
+
     if (choosingCharacter) {
         const centerX = canvas.width / 2;
-        if (e.offsetX > centerX - 80 && e.offsetX < centerX - 40) {
+        if (clickX > centerX - 100 && clickX < centerX - 10) {
             female = false; choosingCharacter = false; generateMaze(); placePlayer();
-        }
-        if (e.offsetX > centerX + 40 && e.offsetX < centerX + 80) {
+        } else if (clickX > centerX + 10 && clickX < centerX + 100) {
             female = true; choosingCharacter = false; generateMaze(); placePlayer();
         }
-    } else {
+    } else if (gameOver) {
+        restartGame();
+    } else if (!isTouchDevice && e.button === 0) {
         attackTimer = 10;
     }
 });
+
+// ===== ÉRINTŐKÉPERNYŐS VEZÉRLŐK =====
+function setupTouchButton(id, onPress, onRelease) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+
+    const startHandler = (e) => {
+        if (e.cancelable) e.preventDefault();
+        onPress();
+    };
+
+    const endHandler = (e) => {
+        if (e.cancelable) e.preventDefault();
+        onRelease();
+    };
+
+    btn.addEventListener("touchstart", startHandler, { passive: false });
+    btn.addEventListener("touchend", endHandler, { passive: false });
+    btn.addEventListener("touchcancel", endHandler, { passive: false });
+
+    btn.addEventListener("pointerdown", startHandler);
+    btn.addEventListener("pointerup", endHandler);
+    btn.addEventListener("pointerleave", endHandler);
+}
+
+setupTouchButton("btn-up",    () => w = true,  () => w = false);
+setupTouchButton("btn-down",  () => s = true,  () => s = false);
+setupTouchButton("btn-left",  () => a = true,  () => a = false);
+setupTouchButton("btn-right", () => d = true,  () => d = false);
+setupTouchButton("btn-attack",() => { if(!gameOver && !choosingCharacter) attackTimer = 10; }, () => {});
+setupTouchButton("btn-spawn", () => { if(!gameOver && !choosingCharacter) respawnPlayer(); }, () => {});
+setupTouchButton("btn-reset", () => { fullResetToCharacterSelect(); }, () => {});
 
 update();

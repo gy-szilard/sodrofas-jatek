@@ -2,6 +2,7 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sodrófás játék</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
@@ -9,22 +10,45 @@
 </head>
 <body>
 
+    <!-- Infó gomb (Mobilon rejtve) -->
     <button id="info-btn" class="info-gomb" title="Irányítás megtekintése">
         <i class="fa-solid fa-circle-info"></i>
     </button>
 
     <div id="info-box" class="leiras">
         <h3><i class="fa-solid fa-gamepad"></i> Információk</h3>
-        <p><span class="kiemelt">Irányítás</span>: W, A, S, D</p>
-        <p><span class="kiemelt">Ütés</span>: Space, Bal egér gomb</p>    
-        <p><span class="kiemelt">Karakterválasztás</span>: Bal egér gomb</p>
+        <p><span class="kiemelt">Irányítás</span>: W, A, S, D / Érintőgombok</p>
+        <p><span class="kiemelt">Ütés</span>: Space, Bal egér gomb / ÜTÉS gomb</p>    
+        <p><span class="kiemelt">Karakterválasztás</span>: Bal egér gomb / Érintés</p>
         <p><span class="kiemelt">A játék teljes újrakezdése</span>: R</p>
         <p><span class="kiemelt">Vissza a "spawn"-ra</span>: Q</p>
-        <p><span class="kiemelt">Game over után újrakezdés</span>: Enter</p>
+        <p><span class="kiemelt">Game over után újrakezdés</span>: Enter / Koppintás</p>
         <p><span class="kiemelt">Sebzés és gyógyulás</span>: A játék előrehaladtával az enemy egyre többet sebez (max 15-öt/ütés) és a szív egyre többet gyógyít (max 40-et/szív).</p>
     </div>
 
-    <canvas id="game"></canvas>
+    <div id="game-container">
+        <canvas id="game"></canvas>
+
+        <!-- Mobil Érintőgombok (PC-n rejtve) -->
+        <div id="touch-controls">
+            <!-- Bal oldal: D-Pad -->
+            <div class="dpad">
+                <button id="btn-up" class="touch-btn dpad-btn up"><i class="fa-solid fa-arrow-up"></i></button>
+                <button id="btn-left" class="touch-btn dpad-btn left"><i class="fa-solid fa-arrow-left"></i></button>
+                <button id="btn-right" class="touch-btn dpad-btn right"><i class="fa-solid fa-arrow-right"></i></button>
+                <button id="btn-down" class="touch-btn dpad-btn down"><i class="fa-solid fa-arrow-down"></i></button>
+            </div>
+            
+            <!-- Jobb oldal: Q, R és ÜTÉS -->
+            <div class="right-controls">
+                <div class="utility-btns">
+                    <button id="btn-spawn" class="touch-btn util-btn" title="Spawn">Q</button>
+                    <button id="btn-reset" class="touch-btn util-btn" title="Újrakezdés">R</button>
+                </div>
+                <button id="btn-attack" class="touch-btn attack-btn">ÜTÉS</button>
+            </div>
+        </div>
+    </div>
 
     <script src="game.js"></script>
     
@@ -32,16 +56,18 @@
         const infoBtn = document.getElementById('info-btn');
         const infoBox = document.getElementById('info-box');
 
-        infoBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); 
-            infoBox.classList.toggle('aktiv');
-        });
+        if (infoBtn && infoBox) {
+            infoBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                infoBox.classList.toggle('aktiv');
+            });
 
-        document.addEventListener('click', (e) => {
-            if (!infoBox.contains(e.target) && e.target !== infoBtn) {
-                infoBox.classList.remove('aktiv');
-            }
-        });
+            document.addEventListener('click', (e) => {
+                if (!infoBox.contains(e.target) && e.target !== infoBtn) {
+                    infoBox.classList.remove('aktiv');
+                }
+            });
+        }
     </script>
 </body>
 </html>
