@@ -150,7 +150,15 @@ function movePlayer() {
 
 function moveNPCs() { npcs.forEach(n => n.move()); }
 
-// ===== Támadás =====
+// ===== Támadás triggerelés (Megakadályozza a beragadást) =====
+function triggerAttack() {
+    // Csak akkor engedünk új ütést, ha az előző már majdnem lefutott (max 2 képkocka maradt)
+    if (attackTimer <= 2) {
+        attackTimer = 12;
+    }
+}
+
+// ===== Támadás Hitbox =====
 function getAttackRect() {
     if (attackTimer <= 0) return null;
     const pinLength = isTouchDevice ? 56 : 48;
@@ -198,8 +206,6 @@ function attackNPCs() {
                 }
                 killsSinceLastHeart = 0;
             }
-            
-            attackTimer = 0;
         }
     });
 }
@@ -255,6 +261,7 @@ function drawCharacter(x, y, isPlayer, femaleOption, currentFacing) {
     drawSprite(img, x + drawOffset, y + drawOffset, renderSize, renderSize, flip);
 }
 
+// Eredeti sodrófa rajzolás (Változatlan)
 function drawRollingPin(atkRect, currentFacing) {
     ctx.save();
     if (!rollingPinImg.complete || rollingPinImg.naturalWidth === 0) { ctx.restore(); return; }
@@ -360,6 +367,7 @@ function fullResetToCharacterSelect() {
     hearts = []; killsSinceLastHeart = 0;
     choosingCharacter = true;
     w = false; a = false; s = false; d = false;
+    attackTimer = 0;
 }
 
 function restartGame() {
@@ -368,6 +376,7 @@ function restartGame() {
     px = cellSize + offset; py = cellSize + offset;
     facing = "right"; gameOver = false;
     hearts = []; killsSinceLastHeart = 0;
+    attackTimer = 0;
     generateMaze(); placePlayer();
 }
 
@@ -400,7 +409,7 @@ document.addEventListener("keydown", e => {
         if (e.key === "s" || e.key === "S") s = true;
         if (e.key === "a" || e.key === "A") a = true;
         if (e.key === "d" || e.key === "D") d = true;
-        if (e.key === " ") attackTimer = 10;
+        if (e.key === " ") triggerAttack();
         if (e.key === "q" || e.key === "Q") respawnPlayer();
         if (e.key === "r" || e.key === "R") fullResetToCharacterSelect();
     }
@@ -433,7 +442,7 @@ canvas.addEventListener("pointerdown", e => {
     } else if (gameOver) {
         restartGame();
     } else if (!isTouchDevice && e.button === 0) {
-        attackTimer = 10;
+        triggerAttack();
     }
 });
 
@@ -465,7 +474,7 @@ setupTouchButton("btn-up",    () => w = true,  () => w = false);
 setupTouchButton("btn-down",  () => s = true,  () => s = false);
 setupTouchButton("btn-left",  () => a = true,  () => a = false);
 setupTouchButton("btn-right", () => d = true,  () => d = false);
-setupTouchButton("btn-attack",() => { if(!gameOver && !choosingCharacter) attackTimer = 10; }, () => {});
+setupTouchButton("btn-attack",() => { if(!gameOver && !choosingCharacter) triggerAttack(); }, () => {});
 setupTouchButton("btn-spawn", () => { if(!gameOver && !choosingCharacter) respawnPlayer(); }, () => {});
 setupTouchButton("btn-reset", () => { fullResetToCharacterSelect(); }, () => {});
 
