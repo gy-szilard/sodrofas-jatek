@@ -39,8 +39,9 @@
 
 ## Ásó
  - 25 killenként kapsz 1 ásót (Egy idejűleg max 3 darab lehet a pályán). 
- - Az ásóval ki tudod szedni a falat (18 mp-ig eltűnik ilyenkor). 
- - Ellenségre használva 10 mp-re lefagyasztja azt.
+ - Az ásóval ki tudod szedni a falat (18 mp-ig eltűnik ilyenkor). **VAGY**
+ - Ellenségen használva 10 mp-re lefagyasztja azt.
+ - Ezekből adodóan az ásók **egyszer használatosak**.
 
 ## Telefonról is játszható?
  - Igen, játszható, ugyanúgy böngészőben meg kell nyitni
