@@ -42,12 +42,12 @@ let removedWalls = []; // { r, c, timer }
 // ===== Sebzés növekedési mechanika =====
 let enemyDamage = 2;
 
-// ===== Szívek & Tárgyak mérete =====
+// ===== Szívek & Tárgyak mérete (Megnövelt Ásó) =====
 let hearts = []; 
 let killsSinceLastHeart = 0;
 const KILLS_REQUIRED_FOR_HEART = 7;
 const HEART_SIZE = isTouchDevice ? 30 : 25;
-const SHOVEL_ITEM_SIZE = isTouchDevice ? 38 : 32; 
+const SHOVEL_ITEM_SIZE = isTouchDevice ? 60 : 70; // Megnövelt ásó méret a földön
 
 // ===== NPC (Ellenség) =====
 class NPC {
@@ -266,8 +266,9 @@ function getAttackRect() {
     if (attackTimer <= 0) return null;
     
     const isShovelAttack = (activeAttackWeapon === "shovel");
-    const pinLength = isShovelAttack ? (isTouchDevice ? 56 : 48) : (isTouchDevice ? 68 : 58);
-    const pinThick  = isShovelAttack ? (isTouchDevice ? 20 : 16) : (isTouchDevice ? 16 : 12);
+    // Megnövelt ásó támadási téglalap méret
+    const pinLength = isShovelAttack ? (isTouchDevice ? 75 : 65) : (isTouchDevice ? 68 : 58);
+    const pinThick  = isShovelAttack ? (isTouchDevice ? 32 : 25) : (isTouchDevice ? 16 : 12);
 
     if (facing === "right") return { x: px + CHAR_SIZE, y: py + (CHAR_SIZE - pinThick) / 2, w: pinLength, h: pinThick };
     if (facing === "left")  return { x: px - pinLength, y: py + (CHAR_SIZE - pinThick) / 2, w: pinLength, h: pinThick };
@@ -302,7 +303,6 @@ function attackNPCs() {
             score++;
             enemyDamage = Math.min(15, 2 + Math.floor(score / 30));
 
-            // Ásó generálás 25 killenként (ha nincs tele az összkészlet)
             killsSinceLastShovel++;
             if (killsSinceLastShovel >= KILLS_REQUIRED_FOR_SHOVEL) {
                 if ((inventoryShovels + droppedShovels.length) < 3) {
@@ -617,27 +617,24 @@ canvas.addEventListener("pointerdown", e => {
     }
 });
 
+// Érintőgombok működtetése kijavítva
 function setupTouchButton(id, onPress, onRelease) {
     const btn = document.getElementById(id);
     if (!btn) return;
 
-    const startHandler = (e) => {
+    btn.addEventListener("pointerdown", (e) => {
         if (e.cancelable) e.preventDefault();
         onPress();
-    };
+    });
 
-    const endHandler = (e) => {
+    btn.addEventListener("pointerup", (e) => {
         if (e.cancelable) e.preventDefault();
         if (onRelease) onRelease();
-    };
+    });
 
-    btn.addEventListener("touchstart", startHandler, { passive: false });
-    btn.addEventListener("touchend", endHandler, { passive: false });
-    btn.addEventListener("touchcancel", endHandler, { passive: false });
-
-    btn.addEventListener("pointerdown", startHandler);
-    btn.addEventListener("pointerup", endHandler);
-    btn.addEventListener("pointerleave", endHandler);
+    btn.addEventListener("pointerleave", (e) => {
+        if (onRelease) onRelease();
+    });
 }
 
 setupTouchButton("btn-up",    () => w = true,  () => w = false);
