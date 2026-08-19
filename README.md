@@ -26,7 +26,7 @@
 - A játék előrehaladtával az enemy egyre többet sebez (max 15-öt / ütés) és a szív egyre többet gyógyít (max 40-et / szív).
 
 ## Ásó
- - 50 killenként kapsz 1 ásót (Egy idejűleg max 3 darab lehet a pályán). 
+ - 15 killenként kapsz 1 ásót (Egy idejűleg max 3 darab lehet a pályán). 
  - Az ásóval ki tudod szedni a falat (18 mp-ig eltűnik ilyenkor). 
  - Ellenségre használva 10 mp-re lefagyasztja azt.
 
