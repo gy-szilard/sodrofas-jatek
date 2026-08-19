@@ -35,8 +35,8 @@ let choosingCharacter = true;
 let currentWeapon = "pin"; 
 let inventoryShovels = 0;
 let killsSinceLastShovel = 0;
+const KILLS_REQUIRED_FOR_SHOVEL = 25; // Ásó megszerzéséhez szükséges killek száma
 let droppedShovels = []; // { x, y }
-let pendingShovels = 0; 
 let removedWalls = []; // { r, c, timer }
 
 // ===== Sebzés növekedési mechanika =====
@@ -47,7 +47,7 @@ let hearts = [];
 let killsSinceLastHeart = 0;
 const KILLS_REQUIRED_FOR_HEART = 7;
 const HEART_SIZE = isTouchDevice ? 30 : 25;
-const SHOVEL_ITEM_SIZE = isTouchDevice ? 60 : 70; 
+const SHOVEL_ITEM_SIZE = isTouchDevice ? 38 : 32; 
 
 // ===== NPC (Ellenség) =====
 class NPC {
@@ -195,13 +195,6 @@ function spawnShovelOnGround() {
     droppedShovels.push({ x: sx, y: sy });
 }
 
-function checkPendingShovels() {
-    while (pendingShovels > 0 && (inventoryShovels + droppedShovels.length) < 3) {
-        spawnShovelOnGround();
-        pendingShovels--;
-    }
-}
-
 function useShovel() {
     if (inventoryShovels <= 0) return;
 
@@ -243,7 +236,6 @@ function useShovel() {
         if (inventoryShovels <= 0) {
             currentWeapon = "pin";
         }
-        checkPendingShovels();
     }
 }
 
@@ -275,7 +267,6 @@ function getAttackRect() {
     
     const isShovelAttack = (activeAttackWeapon === "shovel");
     const pinLength = isShovelAttack ? (isTouchDevice ? 56 : 48) : (isTouchDevice ? 68 : 58);
-    // Sodrófa vékonyítva (16 / 12)
     const pinThick  = isShovelAttack ? (isTouchDevice ? 20 : 16) : (isTouchDevice ? 16 : 12);
 
     if (facing === "right") return { x: px + CHAR_SIZE, y: py + (CHAR_SIZE - pinThick) / 2, w: pinLength, h: pinThick };
@@ -311,12 +302,11 @@ function attackNPCs() {
             score++;
             enemyDamage = Math.min(15, 2 + Math.floor(score / 30));
 
+            // Ásó generálás 25 killenként (ha nincs tele az összkészlet)
             killsSinceLastShovel++;
-            if (killsSinceLastShovel >= 15) {
+            if (killsSinceLastShovel >= KILLS_REQUIRED_FOR_SHOVEL) {
                 if ((inventoryShovels + droppedShovels.length) < 3) {
                     spawnShovelOnGround();
-                } else {
-                    pendingShovels++;
                 }
                 killsSinceLastShovel = 0;
             }
@@ -370,7 +360,6 @@ function checkPickups() {
             if (inventoryShovels < 3) {
                 inventoryShovels++;
                 droppedShovels.splice(i, 1);
-                checkPendingShovels();
             }
         }
     }
@@ -542,7 +531,7 @@ function fullResetToCharacterSelect() {
     hp = 100; score = 0; enemyDamage = 2;
     facing = "right"; gameOver = false;
     hearts = []; killsSinceLastHeart = 0;
-    inventoryShovels = 0; killsSinceLastShovel = 0; droppedShovels = []; pendingShovels = 0; removedWalls = [];
+    inventoryShovels = 0; killsSinceLastShovel = 0; droppedShovels = []; removedWalls = [];
     currentWeapon = "pin"; activeAttackWeapon = "pin";
     choosingCharacter = true;
     w = false; a = false; s = false; d = false;
@@ -555,7 +544,7 @@ function restartGame() {
     px = cellSize + offset; py = cellSize + offset;
     facing = "right"; gameOver = false;
     hearts = []; killsSinceLastHeart = 0;
-    inventoryShovels = 0; killsSinceLastShovel = 0; droppedShovels = []; pendingShovels = 0; removedWalls = [];
+    inventoryShovels = 0; killsSinceLastShovel = 0; droppedShovels = []; removedWalls = [];
     currentWeapon = "pin"; activeAttackWeapon = "pin";
     attackTimer = 0;
     generateMaze(); placePlayer();
