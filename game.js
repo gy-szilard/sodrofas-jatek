@@ -312,7 +312,7 @@ function attackNPCs() {
             enemyDamage = Math.min(15, 2 + Math.floor(score / 30));
 
             killsSinceLastShovel++;
-            if (killsSinceLastShovel >= 1) {
+            if (killsSinceLastShovel >= 50) {
                 if ((inventoryShovels + droppedShovels.length) < 3) {
                     spawnShovelOnGround();
                 } else {
