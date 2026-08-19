@@ -14,16 +14,28 @@
 - Egér bal kattintás
 
 ## Vissza a spawn-ra:
-- Q billentyű
+- Q
 
 ## Játék teljes újra kezdése
-- R billentyű
+- R
+
+## Váltás sodrófa és ásó között
+- E
 
 ## Halál utáni újrakezdés
 - Enter
 
-## Sebzés és gyógyulás
-- A játék előrehaladtával az enemy egyre többet sebez (max 15-öt / ütés) és a szív egyre többet gyógyít (max 40-et / szív).
+## Enemy sebzése
+- **2-t** sebez alapjáraton
+- 30 killenként nő 1-gyel
+- **Max 15**-öt tud sebezni
+- Ha az ásóval kiszedett fal "visszaspawnol" rád, a játékos újraspawnol és elveszíti az aktuális **HP-ja 25%-át**.
+
+## Gyógyulás
+- **15-t** gyógyít alapból
+- 45 kill után 5-tel nő
+- **max 40-et** gyógyít
+- 7 killenként jelenik meg (max 3 lehet egyszerre a pályán)
 
 ## Ásó
  - 25 killenként kapsz 1 ásót (Egy idejűleg max 3 darab lehet a pályán). 
