@@ -18,12 +18,13 @@
     <div id="info-box" class="leiras">
         <h3><i class="fa-solid fa-gamepad"></i> Információk</h3>
         <p><span class="kiemelt">Irányítás</span>: W, A, S, D / Érintőgombok</p>
-        <p><span class="kiemelt">Ütés</span>: Space, Bal egér gomb / ÜTÉS gomb</p>    
+        <p><span class="kiemelt">Támadás / Használat</span>: Space, Bal egér gomb / ÜTÉS gomb</p>    
+        <p><span class="kiemelt">Fegyverváltás</span>: E / E gomb</p>    
         <p><span class="kiemelt">Karakterválasztás</span>: Bal egér gomb / Érintés</p>
         <p><span class="kiemelt">A játék teljes újrakezdése</span>: R</p>
         <p><span class="kiemelt">Vissza a "spawn"-ra</span>: Q</p>
         <p><span class="kiemelt">Game over után újrakezdés</span>: Enter / Koppintás</p>
-        <p><span class="kiemelt">Sebzés és gyógyulás</span>: A játék előrehaladtával az enemy egyre többet sebez (max 15-öt/ütés) és a szív egyre többet gyógyít (max 40-et/szív).</p>
+        <p><span class="kiemelt">Ásó mechanika</span>: 50 killenként kapsz 1 ásót (Egy idejűleg max 3 darab lehet a pályán). Az ásóval ki tudod szedni a falat (18 mp-ig eltűnik ilyenkor). Ellenségre használva 10 mp-re lefagyasztja azt. </p>
     </div>
 
     <div id="game-container">
@@ -39,11 +40,12 @@
                 <button id="btn-down" class="touch-btn dpad-btn down"><i class="fa-solid fa-arrow-down"></i></button>
             </div>
             
-            <!-- Jobb oldal: Q, R és ÜTÉS -->
+            <!-- Jobb oldal: Q, R, E és ÜTÉS -->
             <div class="right-controls">
                 <div class="utility-btns">
                     <button id="btn-spawn" class="touch-btn util-btn" title="Spawn">Q</button>
                     <button id="btn-reset" class="touch-btn util-btn" title="Újrakezdés">R</button>
+                    <button id="btn-weapon" class="touch-btn util-btn" title="Fegyverváltás">E</button>
                 </div>
                 <button id="btn-attack" class="touch-btn attack-btn">ÜTÉS</button>
             </div>
